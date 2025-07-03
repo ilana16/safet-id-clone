@@ -1,9 +1,33 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button.jsx'
 import { Shield, QrCode, Clock, Users } from 'lucide-react'
+import { AuthProvider, useAuth } from './components/AuthContext'
+import LoginModal from './components/LoginModal'
+import Dashboard from './components/Dashboard'
 import './App.css'
 
-function App() {
+function AppContent() {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
+  const { currentUser } = useAuth();
+
+  const handleGetStarted = () => {
+    if (currentUser) {
+      setShowDashboard(true);
+    } else {
+      setIsLoginModalOpen(true);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    setIsLoginModalOpen(false);
+    setShowDashboard(true);
+  };
+
+  if (showDashboard) {
+    return <Dashboard onBack={() => setShowDashboard(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -24,10 +48,17 @@ function App() {
               <a href="#" className="text-gray-600 hover:text-gray-700">Privacy</a>
             </nav>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" className="hidden sm:inline-flex">
-                Login
+              <Button 
+                variant="outline" 
+                className="hidden sm:inline-flex"
+                onClick={() => setIsLoginModalOpen(true)}
+              >
+                {currentUser ? currentUser.displayName || 'Account' : 'Login'}
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={handleGetStarted}
+              >
                 Get Started
               </Button>
             </div>
@@ -52,13 +83,22 @@ function App() {
               SafeT-iD securely stores your health information and makes it accessible through a unique QR code - putting you in control of your medical data.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 px-8 py-3">
-                Create Your SafeT-iD
+              <Button 
+                size="lg" 
+                className="bg-blue-600 hover:bg-blue-700 px-8 py-3"
+                onClick={handleGetStarted}
+              >
+                {currentUser ? 'Access Your SafeT-iD' : 'Create Your SafeT-iD'}
               </Button>
               <Button size="lg" variant="outline" className="px-8 py-3">
                 Learn More
               </Button>
             </div>
+            {currentUser && (
+              <div className="mt-4 text-sm text-green-600">
+                Welcome back, {currentUser.displayName}!
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -130,7 +170,10 @@ function App() {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Create Your Account</h3>
               <p className="text-gray-600 mb-6">Register and fill in your comprehensive medical profile with all your important health information.</p>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={handleGetStarted}
+              >
                 Get Started →
               </Button>
             </div>
@@ -169,8 +212,12 @@ function App() {
           <p className="text-xl text-gray-600 mb-8">
             Create your SafeT-iD account today and ensure your critical health information is always accessible when needed.
           </p>
-          <Button size="lg" className="bg-blue-600 hover:bg-blue-700 px-8 py-3">
-            Get Started Now
+          <Button 
+            size="lg" 
+            className="bg-blue-600 hover:bg-blue-700 px-8 py-3"
+            onClick={handleGetStarted}
+          >
+            {currentUser ? 'Access Your Account' : 'Get Started Now'}
           </Button>
         </div>
       </section>
@@ -223,8 +270,22 @@ function App() {
           </div>
         </div>
       </footer>
+
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)}
+        onSuccess={handleLoginSuccess}
+      />
     </div>
   )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
 }
 
 export default App
